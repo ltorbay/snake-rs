@@ -69,3 +69,104 @@ impl Snake {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_snake() {
+        let snake = Snake::new();
+        assert_eq!(snake.body.len(), 1);
+        assert_eq!(snake.head_position(), Position { x: 10, y: 10 });
+        assert!(matches!(snake.dir, Direction::Right));
+    }
+
+    #[test]
+    fn test_snake_movement() {
+        let mut snake = Snake::new();
+        
+        // Test right movement (default)
+        snake.update();
+        assert_eq!(snake.head_position(), Position { x: 11, y: 10 });
+
+        // Test downward movement
+        snake.dir = Direction::Down;
+        snake.update();
+        assert_eq!(snake.head_position(), Position { x: 11, y: 11 });
+
+        // Test left movement
+        snake.dir = Direction::Left;
+        snake.update();
+        assert_eq!(snake.head_position(), Position { x: 10, y: 11 });
+
+        // Test upward movement
+        snake.dir = Direction::Up;
+        snake.update();
+        assert_eq!(snake.head_position(), Position { x: 10, y: 10 });
+    }
+
+    #[test]
+    fn test_snake_growth() {
+        let mut snake = Snake::new();
+        let initial_length = snake.body.len();
+        
+        snake.grow();
+        assert_eq!(snake.body.len(), initial_length + 1);
+        
+        // Verify position after growing and moving
+        snake.update();
+        assert_eq!(snake.body.len(), initial_length + 1);
+        assert_eq!(snake.head_position(), Position { x: 11, y: 10 });
+    }
+
+    #[test]
+    fn test_snake_collision() {
+        let mut snake = Snake::new();
+        
+        // Grow the snake a few times to make it long enough for self collision
+        for _ in 0..5 {
+            snake.grow();
+        }
+        
+        // Create a path that leads to self collision
+        snake.update(); // Right
+        snake.update(); // Right again
+        snake.dir = Direction::Down;
+        snake.update();
+        snake.dir = Direction::Left;
+        snake.update();
+        snake.dir = Direction::Up;
+        snake.update();
+        
+        assert!(snake.collides_with_self());
+    }
+
+    #[test]
+    fn test_snake_wrapping() {
+        let mut snake = Snake::new();
+        
+        // Test wrapping right to left
+        for _ in 0..30 {
+            snake.update();
+        }
+        assert_eq!(snake.head_position().x, 0);
+        
+        // Test wrapping left to right
+        snake.dir = Direction::Left;
+        snake.update();
+        assert_eq!(snake.head_position().x, (crate::WINDOW_WIDTH / crate::SQUARE_WIDTH) - 1);
+        
+        // Test wrapping bottom to top
+        snake = Snake::new();
+        snake.dir = Direction::Down;
+        for _ in 0..30 {
+            snake.update();
+        }
+        assert_eq!(snake.head_position().y, 0);
+        
+        // Test wrapping top to bottom
+        snake.dir = Direction::Up;
+        snake.update();
+        assert_eq!(snake.head_position().y, (crate::WINDOW_HEIGHT / crate::SQUARE_WIDTH) - 1);
+    }
+}
