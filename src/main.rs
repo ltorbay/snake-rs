@@ -114,28 +114,55 @@ fn main() {
             clear([0.5, 0.5, 0.5, 1.0], graphics);
 
             // Draw snake
-            for pos in &game.snake.body {
+            let segments: Vec<_> = game.snake.body.iter().collect();
+            for (i, pos) in segments.iter().enumerate() {
+                let offset = 2; // Space between segments
+                let size = if i == 0 { SQUARE_WIDTH } else { SQUARE_WIDTH - 4 };
+                let color = if i == 0 {
+                    [0.0, 0.8, 0.0, 1.0] // Brighter green for head
+                } else {
+                    [0.0, 0.6, 0.0, 1.0] // Darker green for body
+                };
+
+                // Add offset to create spacing between segments
                 rectangle(
-                    [0.0, 1.0, 0.0, 1.0],
+                    color,
                     [
-                        (pos.x * SQUARE_WIDTH) as f64,
-                        (pos.y * SQUARE_WIDTH) as f64,
-                        (SQUARE_WIDTH - 1) as f64,
-                        (SQUARE_WIDTH - 1) as f64,
+                        (pos.x * SQUARE_WIDTH + offset) as f64,
+                        (pos.y * SQUARE_WIDTH + offset) as f64,
+                        (size - offset * 2) as f64,
+                        (size - offset * 2) as f64
                     ],
                     context.transform,
                     graphics,
                 );
             }
 
-            // Draw food
+            // Draw food with glow effect
+            let food_size = SQUARE_WIDTH - 4;
+            let food_offset = 2;
+
+            // Draw glow effect
             rectangle(
-                [1.0, 0.0, 0.0, 1.0],
+                [1.0, 0.0, 0.0, 0.3],
                 [
                     (game.food.pos.x * SQUARE_WIDTH) as f64,
                     (game.food.pos.y * SQUARE_WIDTH) as f64,
-                    (SQUARE_WIDTH - 1) as f64,
-                    (SQUARE_WIDTH - 1) as f64,
+                    SQUARE_WIDTH as f64,
+                    SQUARE_WIDTH as f64
+                ],
+                context.transform,
+                graphics,
+            );
+
+            // Draw food
+            rectangle(
+                [1.0, 0.0, 0.0, 0.8],
+                [
+                    (game.food.pos.x * SQUARE_WIDTH + food_offset) as f64,
+                    (game.food.pos.y * SQUARE_WIDTH + food_offset) as f64,
+                    (food_size) as f64,
+                    (food_size) as f64
                 ],
                 context.transform,
                 graphics,
