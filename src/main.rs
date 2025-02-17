@@ -4,12 +4,13 @@ extern crate rand;
 mod position;
 mod direction;
 mod snake;
+mod fruit;
 
-use piston_window::*;
-use rand::Rng;
-
-use position::Position;
 use direction::Direction;
+use fruit::FruitSprites;
+use piston_window::*;
+use position::Position;
+use rand::Rng;
 use snake::Snake;
 
 pub const SQUARE_WIDTH: i32 = 20;
@@ -18,17 +19,19 @@ pub const WINDOW_HEIGHT: i32 = 800;
 
 struct Food {
     pos: Position,
+    sprite_index: usize,  // Index into the fruit sprites vector
 }
 
 struct Game {
     snake: Snake,
     food: Food,
     game_over: bool,
+    fruit_sprites: FruitSprites,
 }
 
 
 impl Food {
-    fn new(snake: &Snake) -> Food {
+    fn new(snake: &Snake, fruit_sprites: &FruitSprites) -> Food {
         let mut rng = rand::thread_rng();
         let max_pos = (WINDOW_WIDTH / SQUARE_WIDTH) - 1;
 
@@ -39,20 +42,25 @@ impl Food {
             };
             
             if !snake.body.iter().any(|p| p.x == pos.x && p.y == pos.y) {
-                return Food { pos };
+                return Food {
+                    pos,
+                    sprite_index: fruit_sprites.random_index(),
+                };
             }
         }
     }
 }
 
 impl Game {
-    fn new() -> Game {
+    fn new(window: &mut PistonWindow) -> Game {
         let snake = Snake::new();
-        let food = Food::new(&snake);
+        let fruit_sprites = FruitSprites::new(window).expect("Failed to load fruit sprites");
+        let food = Food::new(&snake, &fruit_sprites);
         Game {
             snake,
             food,
             game_over: false,
+            fruit_sprites,
         }
     }
 
@@ -71,7 +79,7 @@ impl Game {
         let head = self.snake.head_position();
         if head.x == self.food.pos.x && head.y == self.food.pos.y {
             self.snake.grow();
-            self.food = Food::new(&self.snake);
+            self.food = Food::new(&self.snake, &self.fruit_sprites);
         }
     }
 }
@@ -85,7 +93,7 @@ fn main() {
     .build()
     .unwrap();
 
-    let mut game = Game::new();
+    let mut game = Game::new(&mut window);
     let mut glyphs = window.load_font("assets/FiraSans-Regular.ttf").unwrap();
     let mut events = Events::new(EventSettings::new().ups(8));
 
@@ -138,34 +146,18 @@ fn main() {
                 );
             }
 
-            // Draw food with glow effect
-            let food_size = SQUARE_WIDTH - 4;
-            let food_offset = 2;
-
-            // Draw glow effect
-            rectangle(
-                [1.0, 0.0, 0.0, 0.3],
-                [
+            // Draw food sprite
+            let food_texture = game.fruit_sprites.get_texture(game.food.sprite_index);
+            image(
+                food_texture,
+                context.transform.trans(
                     (game.food.pos.x * SQUARE_WIDTH) as f64,
-                    (game.food.pos.y * SQUARE_WIDTH) as f64,
-                    SQUARE_WIDTH as f64,
-                    SQUARE_WIDTH as f64
-                ],
-                context.transform,
-                graphics,
-            );
-
-            // Draw food
-            rectangle(
-                [1.0, 0.0, 0.0, 0.8],
-                [
-                    (game.food.pos.x * SQUARE_WIDTH + food_offset) as f64,
-                    (game.food.pos.y * SQUARE_WIDTH + food_offset) as f64,
-                    (food_size) as f64,
-                    (food_size) as f64
-                ],
-                context.transform,
-                graphics,
+                    (game.food.pos.y * SQUARE_WIDTH) as f64
+                ).scale(
+                    SQUARE_WIDTH as f64 / food_texture.get_width() as f64,
+                    SQUARE_WIDTH as f64 / food_texture.get_height() as f64
+                ),
+                graphics
             );
 
             if game.game_over {
