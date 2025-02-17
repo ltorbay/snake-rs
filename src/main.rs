@@ -32,13 +32,13 @@ struct Game {
 
 impl Food {
     fn new(snake: &Snake, fruit_sprites: &FruitSprites) -> Food {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let max_pos = (WINDOW_WIDTH / SQUARE_WIDTH) - 1;
 
         loop {
             let pos = Position {
-                x: rng.gen_range(0..=max_pos),
-                y: rng.gen_range(0..=max_pos),
+                x: rng.random_range(0..=max_pos),
+                y: rng.random_range(0..=max_pos),
             };
             
             if !snake.body.iter().any(|p| p.x == pos.x && p.y == pos.y) {

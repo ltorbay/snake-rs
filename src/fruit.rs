@@ -51,7 +51,7 @@ impl FruitSprites {
     }
 
     pub fn random_index(&self) -> usize {
-        rand::thread_rng().gen_range(0..self.sprites.len())
+        rand::rng().random_range(0..self.sprites.len())
     }
 
     pub fn get_texture(&self, index: usize) -> &G2dTexture {
