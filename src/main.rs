@@ -7,7 +7,7 @@ mod snake;
 mod fruit;
 
 use direction::Direction;
-use fruit::FruitSprites;
+use fruit::{FruitSprites, WindowTextureLoader};
 use piston_window::*;
 use position::Position;
 use rand::Rng;
@@ -54,7 +54,8 @@ impl Food {
 impl Game {
     fn new(window: &mut PistonWindow) -> Game {
         let snake = Snake::new();
-        let fruit_sprites = FruitSprites::new(window).expect("Failed to load fruit sprites");
+        let mut texture_loader = WindowTextureLoader::new(window);
+        let fruit_sprites = FruitSprites::new(&mut texture_loader).expect("Failed to load fruit sprites");
         let food = Food::new(&snake, &fruit_sprites);
         Game {
             snake,
